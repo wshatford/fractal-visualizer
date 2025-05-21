@@ -4,6 +4,13 @@ import pygame
 
 # Screen setup
 pygame.init()
+pygame.mixer.init()
+pygame.mixer.music.load("assets/SalmonLikeTheFish - Zion.mp3")
+pygame.mixer.music.set_volume(0.5)
+pygame.mixer.music.play(-1)
+
+font = pygame.font.SysFont(None, 60)
+
 info = pygame.display.Info()
 WIDTH, HEIGHT = info.current_w, info.current_h
 screen = pygame.display.set_mode((WIDTH, HEIGHT), pygame.FULLSCREEN)
@@ -14,16 +21,39 @@ CENTER = (WIDTH // 2, HEIGHT // 2)
 SCENE_DURATION = FPS * 10
 FADE_DURATION = FPS * 2
 
+def draw_scene_title(surface, text, alpha):
+    label = font.render(text, True, (255, 255, 255))
+    label.set_alpha(alpha)
+    rect = label.get_rect(center=(WIDTH // 2, 80))
+    surface.blit(label, rect)
+
+
+# --- Pattern base with optional duration and music ---
 class Pattern:
+    duration = FPS * 15  # default
+    music_file = None
     def update(self):
         pass
     def draw(self, surface):
         pass
 
-
-
+def draw_recursive_flower(surface, x, y, hue, angle, depth=3, scale=1.0):
+    if depth == 0:
+        return
+    color = pygame.Color(0)
+    color.hsva = (hue * 360 % 360, 70, 100, 100)
+    for i in range(6):
+        a = math.radians(i * 60 + angle)
+        dx = math.cos(a) * 10 * scale
+        dy = math.sin(a) * 10 * scale
+        pygame.draw.ellipse(surface, color, (x + dx - 5 * scale, y + dy - 5 * scale, 10 * scale, 10 * scale))
+        draw_recursive_flower(surface, x + dx, y + dy, hue + 0.02, angle + 10, depth - 1, scale * 0.8)
 
 class PainterlyMandalaField(Pattern):
+    name = "PainterlyMandalaField"
+    duration = FPS * 20
+    music_file = "assets/SalmonLikeTheFish - Zion.mp3"
+
     class Ring:
         def __init__(self, center, layers=4):
             self.center = center
@@ -80,12 +110,21 @@ class PainterlyMandalaField(Pattern):
                     self.draw_petal(surface, x, y, angle, hue)
 
     def __init__(self):
+        self.reset()
+        self.age = 0
+        self.reset_interval = FPS * 5  # 5 seconds
+
+    def reset(self):
         self.rings = [self.Ring(
             (random.randint(150, WIDTH - 150), random.randint(150, HEIGHT - 150)),
             layers=random.randint(3, 5)
         ) for _ in range(8)]
 
     def update(self):
+        self.age += 1
+        if self.age >= self.reset_interval:
+            self.reset()
+            self.age = 0
         for r in self.rings:
             r.update()
 
@@ -94,8 +133,11 @@ class PainterlyMandalaField(Pattern):
             r.draw(surface)
 
 
-
 class BrushStreakBurst(Pattern):
+    name = "BrushStreakBurst"
+    duration = FPS * 20
+    music_file = "assets/Jahzzar - Change.mp3"
+
     class Streak:
         def __init__(self):
             self.center = (random.randint(150, WIDTH - 150), random.randint(150, HEIGHT - 150))
@@ -133,8 +175,12 @@ class BrushStreakBurst(Pattern):
         for s in self.streaks:
             s.draw(surface)
 
-
+# Took this one out.  Just didn't add much
 class SoftLayeredBloom(Pattern):
+    name = "SoftLayeredBloom"
+    duration = FPS * 20
+    music_file = "assets/The Sluts With Nuts - Mike and Ron Jam.mp3"
+
     class Bloom:
         def __init__(self):
             self.center = (random.randint(150, WIDTH - 150), random.randint(150, HEIGHT - 150))
@@ -179,8 +225,11 @@ class SoftLayeredBloom(Pattern):
             b.draw(surface)
 
 
-
 class ExpressiveSwirlBloom(Pattern):
+    name = "ExpressiveSwirlBloom"
+    duration = FPS * 20
+    music_file = "assets/JBlanked - Many Blessings (Instrumental).mp3"
+
     def __init__(self):
         self.swirls = [self.create_swirl() for _ in range(6)]
 
@@ -221,6 +270,10 @@ class ExpressiveSwirlBloom(Pattern):
                     pygame.draw.circle(surface, color, (sx, sy), size)
 
 class GalaxySwirlBloom(Pattern):
+    name = "GalaxySwirlBloom"
+    duration = FPS * 20
+    music_file = "assets/SalmonLikeTheFish - Glacier.mp3"
+
     class Particle:
         def __init__(self, center):
             self.center = center
@@ -262,8 +315,11 @@ class GalaxySwirlBloom(Pattern):
             p.draw(surface)
 
 
-
 class VortexPetal:
+    name = "VortexPetal"
+    duration = FPS * 15
+    music_file = "assets/SalmonLikeTheFish - Sequoia.mp3"
+
     def __init__(self):
         self.angle = random.uniform(0, 2 * math.pi)
         self.radius = random.uniform(50, min(WIDTH, HEIGHT) // 2)
@@ -293,6 +349,10 @@ class VortexPetal:
         surface.blit(rotated, rect)
 
 class PetalDriftVortexScene(Pattern):
+    name = "PetalDriftVortexScene"
+    duration = FPS * 15
+    music_file = "assets/JBlanked - Cobie Sample.mp3"
+
     def __init__(self):
         self.petals = [VortexPetal() for _ in range(80)]
 
@@ -309,6 +369,10 @@ class PetalDriftVortexScene(Pattern):
 
 # --- PainterlyFlowerField (multiple flowers) ---
 class PainterlyFlowerField(Pattern):
+    name = "PainterlyFlowerField"
+    duration = FPS * 15
+    music_file = "assets/Squire Tuck - Dreams Like These.mp3"
+
     class Flower:
         def __init__(self, center, layers=3):
             self.center = center
@@ -392,45 +456,44 @@ class PainterlyFlowerField(Pattern):
 
 
 # --- FractalSpiralBloom pattern ---
+# Took this one out... just boring :-(
 class FractalSpiralBloom(Pattern):
+    name = "FractalSpiralBloom"
+    duration = FPS * 15
+    music_file = "assets/Il Sogno Del Marinaio - Partisian Song.mp3"
+
     def __init__(self):
         self.flowers = []
         self.max_flowers = 300
         self.angle_offset = 137.5
-        self.scale = 3
+        self.scale = 2.5
         self.frame = 0
+        self.global_rotation = 0
+        self.rotation_speed = 0.002
 
     def update(self):
         if len(self.flowers) < self.max_flowers:
-            i = len(self.flowers)
-            theta = math.radians(i * self.angle_offset)
-            r = self.scale * math.sqrt(i) * 20
-            x = WIDTH // 2 + r * math.cos(theta)
-            y = HEIGHT // 2 + r * math.sin(theta)
-            hue = (i * 0.01 + self.frame * 0.002) % 1.0
-            self.flowers.append((x, y, hue, i * 2))
+            for _ in range(4):  # Add multiple per frame for richer fill
+                i = len(self.flowers)
+                theta = math.radians(i * self.angle_offset + self.global_rotation)
+                r = self.scale * math.sqrt(i) * 18
+                x = WIDTH // 2 + r * math.cos(theta)
+                y = HEIGHT // 2 + r * math.sin(theta)
+                hue = (i * 0.015 + self.frame * 0.001) % 1.0
+                self.flowers.append((x, y, hue, i * 2))
         self.frame += 1
+        self.global_rotation += self.rotation_speed
 
     def draw(self, surface):
         for x, y, hue, angle in self.flowers:
             draw_recursive_flower(surface, x, y, hue, angle)
 
-def draw_recursive_flower(surface, x, y, hue, angle, depth=3, scale=1.0):
-    if depth == 0:
-        return
-    color = pygame.Color(0)
-    color.hsva = (hue * 360 % 360, 70, 100, 100)
-    for i in range(6):
-        a = math.radians(i * 60 + angle)
-        dx = math.cos(a) * 10 * scale
-        dy = math.sin(a) * 10 * scale
-        pygame.draw.ellipse(surface, color, (x + dx - 5 * scale, y + dy - 5 * scale, 10 * scale, 10 * scale))
-        draw_recursive_flower(surface, x + dx, y + dy, hue + 0.02, angle + 10, depth - 1, scale * 0.8)
-
-
-
 # --- MultiRosePattern ---
 class MultiRosePattern(Pattern):
+    name = "MultiRosePattern"
+    duration = FPS * 25
+    music_file = "assets/JBlanked - I'm Down (Instrumental).mp3"
+
     def __init__(self):
         self.roses = [self.create_rose() for _ in range(5)]
 
@@ -471,31 +534,92 @@ class MultiRosePattern(Pattern):
 
 # --- PhyllotaxisPattern ---
 class PhyllotaxisPattern(Pattern):
+    name = "PhyllotaxisPattern"
+    duration = FPS * 15
+    music_file = "assets/Squire Tuck - Squire Tuck - Irrational Fear of Fearing Nothing at all.mp3"
+
     def __init__(self):
         self.n = 0
-        self.c = random.randint(4, 10)
+        self.c = random.uniform(2.5, 6.0)  # Tighter spacing for density
         self.hue_offset = random.randint(0, 360)
+        self.noise = [random.uniform(-2, 2) for _ in range(20000)]  # More jitter
 
     def update(self):
-        self.n += 5
-        self.hue_offset += 0.5
+        self.n += 30  # Faster growth rate
 
     def draw(self, surface):
         for i in range(self.n):
             angle = i * 137.5 * math.pi / 180
-            r = self.c * math.sqrt(i)
+            angle += self.noise[i % len(self.noise)] * 0.015
+            r = self.c * math.sqrt(i) + self.noise[i % len(self.noise)] * 1.5
+
             x = r * math.cos(angle)
             y = r * math.sin(angle)
             sx = int(CENTER[0] + x)
             sy = int(CENTER[1] + y)
+
             if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
-                hue = (i + self.hue_offset) % 360
+                hue = (i * 0.8 + self.hue_offset + self.noise[i % len(self.noise)] * 5) % 360
                 color = pygame.Color(0)
-                color.hsva = (hue, 100, 100, 100)
-                pygame.draw.circle(surface, color, (sx, sy), 3)
+                color.hsva = (hue, 80, 100, 100)
+                radius = 2 if i % 3 else 3  # Slight variation in size
+                pygame.draw.circle(surface, color, (sx, sy), radius)
+
+class MultiPhyllotaxisBursts(Pattern):
+    name = "PhyllotaxisBursts"
+    duration = FPS * 12
+    music_file = "assets/Squire Tuck - Squire Tuck - Irrational Fear of Fearing Nothing at all.mp3"
+
+    class Burst:
+        def __init__(self):
+            self.center = (random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100))
+            self.c = random.uniform(4, 7)
+            self.hue_offset = random.randint(0, 360)
+            self.rotation = random.uniform(0, 2 * math.pi)
+            self.rotation_speed = random.uniform(-0.01, 0.01)
+            self.points = []
+            self.max_n = random.randint(300, 800)
+            self.age = 0
+
+        def update(self):
+            self.rotation += self.rotation_speed
+            self.age += 1
+            if len(self.points) < self.max_n:
+                for _ in range(random.randint(5, 12)):  # Add more points gradually
+                    i = len(self.points)
+                    angle = i * 137.5 * math.pi / 180 + self.rotation
+                    r = self.c * math.sqrt(i) + random.uniform(-1, 1)
+                    x = self.center[0] + math.cos(angle) * r + random.uniform(-1, 1)
+                    y = self.center[1] + math.sin(angle) * r + random.uniform(-1, 1)
+                    hue = (self.hue_offset + i * 0.7) % 360
+                    self.points.append((x, y, hue, i))
+
+        def draw(self, surface):
+            for x, y, hue, i in self.points:
+                size = max(1, int(4 - i / 200))  # Shrink older dots
+                color = pygame.Color(0)
+                color.hsva = ((hue + self.age * 0.5) % 360, 100, 100, 100)
+                if 0 <= x < WIDTH and 0 <= y < HEIGHT:
+                    pygame.draw.circle(surface, color, (int(x), int(y)), size)
+
+    def __init__(self):
+        self.bursts = [self.Burst() for _ in range(8)]
+
+    def update(self):
+        for burst in self.bursts:
+            burst.update()
+
+    def draw(self, surface):
+        for burst in self.bursts:
+            burst.draw(surface)
+
 
 # --- MultiLissajousPattern ---
 class MultiLissajousPattern(Pattern):
+    name = "MultiLissajousPattern"
+    duration = FPS * 25
+    music_file = "assets/Squire Tuck - A Mexican Love Affair.mp3"
+
     def __init__(self):
         self.figures = [self.create_fig() for _ in range(5)]
 
@@ -523,20 +647,35 @@ class MultiLissajousPattern(Pattern):
 
     def draw(self, surface):
         for fig in self.figures:
+            points = []
             for i in range(1000):
                 t = i * 2 * math.pi / 1000
                 x = fig['a'] * math.sin(fig['freq_x'] * t + fig['delta'])
                 y = fig['b'] * math.sin(fig['freq_y'] * t)
                 sx = int(fig['center'][0] + x)
                 sy = int(fig['center'][1] + y)
+                points.append((sx, sy))
                 if 0 <= sx < WIDTH and 0 <= sy < HEIGHT:
                     hue = (i + fig['hue_offset']) % 360
                     color = pygame.Color(0)
                     color.hsva = (hue, 100, 100, 100)
-                    pygame.draw.circle(surface, color, (sx, sy), 2)
+                    radius = int(2 + 2 * math.sin(i * 0.01))  # Animate thickness
+                    pygame.draw.circle(surface, color, (sx, sy), radius)
+
+            # Optional glow trail using translucent lines between points
+            for i in range(1, len(points)):
+                p1, p2 = points[i - 1], points[i]
+                glow_color = pygame.Color(0)
+                glow_color.hsva = ((fig['hue_offset'] + i) % 360, 100, 100, 30)
+                pygame.draw.line(surface, glow_color, p1, p2, 2)
+
 
 # --- MultiLSystemPattern with slow growth and random angles ---
 class MultiLSystemPattern(Pattern):
+    name = "MultiLSystemPattern"
+    duration = FPS * 20
+    music_file = "assets/Circus Marcus - Pompas de Jabón.mp3"
+
     def __init__(self):
         self.instances = [self.create_instance() for _ in range(4)]
         self.axiom = "F"
@@ -597,6 +736,7 @@ class MultiLSystemPattern(Pattern):
 
 # --- PetalField overlay ---
 class Petal:
+    name = "Petal"
     def __init__(self):
         self.x = random.randint(0, WIDTH)
         self.y = random.randint(-100, -40)
@@ -625,26 +765,12 @@ class Petal:
         rect = rotated.get_rect(center=(int(self.x), int(self.y)))
         surface.blit(rotated, rect)
 
-class PetalField:
-    def __init__(self):
-        self.petals = [Petal() for _ in range(30)]
-
-    def update(self):
-        self.petals = [p for p in self.petals if p.update()]
-        while len(self.petals) < 30:
-            self.petals.append(Petal())
-
-    def draw(self, surface):
-        for p in self.petals:
-            p.draw(surface)
-
-
-# PetalField initialization
-petal_field = PetalField()
-
 
 # --- RotatingFlowerField pattern ---
 class RotatingFlowerField(Pattern):
+    name = "RotatingFlowerField"
+    duration = FPS * 15
+    music_file = "assets/SalmonLikeTheFish - Zion.mp3"
     class Flower:
         def __init__(self, center, layers=3, petals_per_layer=6):
             self.center = center
@@ -706,32 +832,52 @@ class RotatingFlowerField(Pattern):
             flower.draw(surface)
 
 
-# Scene cycling
-patterns = [PainterlyFlowerField,FractalSpiralBloom,RotatingFlowerField,MultiRosePattern, PhyllotaxisPattern, MultiLissajousPattern, MultiLSystemPattern]
+class PetalField:
+    def __init__(self):
+        self.petals = [Petal() for _ in range(30)]
+
+    def update(self):
+        self.petals = [p for p in self.petals if p.update()]
+        while len(self.petals) < 30:
+            self.petals.append(Petal())
+
+    def draw(self, surface):
+        for p in self.petals:
+            p.draw(surface)
+
+
+# PetalField initialization
+petal_field = PetalField()
+
+# --- Scene manager ---
+patterns = [
+    PainterlyMandalaField,
+    BrushStreakBurst,
+    ExpressiveSwirlBloom,
+    GalaxySwirlBloom,
+    PetalDriftVortexScene,
+    PainterlyFlowerField,
+    MultiRosePattern,
+    PhyllotaxisPattern,
+    MultiPhyllotaxisBursts,
+    RotatingFlowerField,
+    MultiLissajousPattern,
+    MultiLSystemPattern
+]
+
 scene_index = 0
 current_pattern = patterns[scene_index]()
 frame_count = 0
+scene_duration = getattr(current_pattern, 'duration', FPS * 10)
 fade_surface = pygame.Surface((WIDTH, HEIGHT))
 fade_surface.fill((0, 0, 0))
 
-# Scene cycling
-patterns = [PainterlyMandalaField, BrushStreakBurst, SoftLayeredBloom, ExpressiveSwirlBloom,
-            GalaxySwirlBloom,
-            PetalDriftVortexScene,
-            PainterlyFlowerField,
-            FractalSpiralBloom,
-            MultiRosePattern,
-            PhyllotaxisPattern,
-            RotatingFlowerField,
-            MultiLissajousPattern,
-            MultiLSystemPattern
-            ]
-scene_index = 0
-current_pattern = patterns[scene_index]()
-frame_count = 0
-fade_surface = pygame.Surface((WIDTH, HEIGHT))
-fade_surface.fill((0, 0, 0))
+# Music loading
+if getattr(current_pattern, 'music_file', None):
+    pygame.mixer.music.load(current_pattern.music_file)
+    pygame.mixer.music.play(-1, fade_ms=500)
 
+# --- Main loop ---
 running = True
 while running:
     screen.fill((10, 10, 30))
@@ -740,24 +886,35 @@ while running:
     petal_field.draw(screen)
     current_pattern.draw(screen)
 
-    if SCENE_DURATION - FADE_DURATION <= frame_count < SCENE_DURATION:
-        alpha = int(255 * (frame_count - (SCENE_DURATION - FADE_DURATION)) / FADE_DURATION)
+    if scene_duration - FADE_DURATION <= frame_count < scene_duration:
+        alpha = int(255 * (frame_count - (scene_duration - FADE_DURATION)) / FADE_DURATION)
         fade_surface.set_alpha(alpha)
         screen.blit(fade_surface, (0, 0))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
-            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
-        ):
+            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
             running = False
+
+    # Show pattern name for first 2 seconds
+    if frame_count < FPS * 2:
+        fade_alpha = int(255 * (1 - (frame_count / (FPS * 2))))
+        # For testing, this will show the title of the pattern being run
+        #draw_scene_title(screen, current_pattern.name, fade_alpha)
 
     pygame.display.flip()
     clock.tick(FPS)
     frame_count += 1
 
-    if frame_count >= SCENE_DURATION:
+    if frame_count >= scene_duration:
+        pygame.mixer.music.fadeout(500)
         scene_index = (scene_index + 1) % len(patterns)
         current_pattern = patterns[scene_index]()
         frame_count = 0
+        scene_duration = getattr(current_pattern, 'duration', FPS * 10)
+        music_file = getattr(current_pattern, 'music_file', None)
+        if music_file:
+            pygame.mixer.music.load(music_file)
+            pygame.mixer.music.play(-1, fade_ms=500)
 
 pygame.quit()
