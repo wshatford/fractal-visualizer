@@ -5,9 +5,9 @@ import pygame
 # Screen setup
 pygame.init()
 pygame.mixer.init()
-pygame.mixer.music.load("assets/SalmonLikeTheFish - Zion.mp3")
+#pygame.mixer.music.load("assets/SalmonLikeTheFish - Zion.mp3")
 pygame.mixer.music.set_volume(0.5)
-pygame.mixer.music.play(-1)
+#pygame.mixer.music.play(-1)
 
 font = pygame.font.SysFont(None, 60)
 
@@ -36,6 +36,62 @@ class Pattern:
         pass
     def draw(self, surface):
         pass
+
+class ButterflyScene(Pattern):
+    name = "ButterflyScene"
+    duration = FPS * 20
+    #music_file = "assets/JBlanked - Cobie Sample.mp3"
+    music_file = "assets/JBlanked - Many Blessings (Instrumental).mp3"
+
+    def __init__(self):
+        self.background = pygame.image.load("assets/floral.png").convert()
+        self.background = pygame.transform.scale(self.background, (WIDTH, HEIGHT))
+        self.overlay = pygame.Surface((WIDTH, HEIGHT), pygame.SRCALPHA)
+        self.overlay.fill((0, 0, 0, 175))  # BACKGROUND_ALPHA = 80 → 255-80 = 175
+
+        self.butterfly_image = pygame.image.load("assets/butterfly.png").convert_alpha()
+        self.butterflies = [self.Butterfly(self.butterfly_image) for _ in range(14)]
+
+    class Butterfly:
+        def __init__(self, image):
+            self.image = image
+            self.x = random.uniform(0, WIDTH)
+            self.y = random.uniform(0, HEIGHT)
+            self.vx = random.uniform(-1.5, 1.5)
+            self.vy = random.uniform(-1.0, 1.0)
+            self.wing_angle = 0
+            self.wing_speed = random.uniform(0.15, 0.25)
+            self.scale = random.uniform(1.0, 1.6)
+
+        def update(self):
+            self.x += self.vx
+            self.y += self.vy
+            self.wing_angle = math.sin(pygame.time.get_ticks() * self.wing_speed * 0.01) * 20
+            if self.x < 0 or self.x > WIDTH: self.vx *= -1
+            if self.y < 0 or self.y > HEIGHT: self.vy *= -1
+
+        def draw(self, surface):
+            glow = pygame.Surface((100, 80), pygame.SRCALPHA)
+            pygame.draw.ellipse(glow, (255, 255, 255, 25), (20, 30, 60, 30))
+            glow = pygame.transform.rotozoom(glow, self.wing_angle, self.scale)
+            glow_rect = glow.get_rect(center=(int(self.x), int(self.y)))
+            surface.blit(glow, glow_rect)
+
+            rotated = pygame.transform.rotozoom(self.image, self.wing_angle, self.scale)
+            rect = rotated.get_rect(center=(int(self.x), int(self.y)))
+            surface.blit(rotated, rect)
+
+    def update(self):
+        for b in self.butterflies:
+            b.update()
+
+    def draw(self, surface):
+        surface.blit(self.background, (0, 0))
+        surface.blit(self.overlay, (0, 0))  # dim overlay
+        for b in self.butterflies:
+            b.draw(surface)
+
+
 
 def draw_recursive_flower(surface, x, y, hue, angle, depth=3, scale=1.0):
     if depth == 0:
@@ -583,43 +639,48 @@ class PhyllotaxisPattern(Pattern):
 
 class MultiPhyllotaxisBursts(Pattern):
     name = "PhyllotaxisBursts"
-    duration = FPS * 12
+    duration = FPS * 20  # Optionally adjust to match longer music
     music_file = "assets/Squire Tuck - Squire Tuck - Irrational Fear of Fearing Nothing at all.mp3"
 
     class Burst:
         def __init__(self):
-            self.center = (random.randint(100, WIDTH - 100), random.randint(100, HEIGHT - 100))
-            self.c = random.uniform(4, 7)
+            self.center = (random.randint(50, WIDTH - 50), random.randint(50, HEIGHT - 50))
+            self.c = random.uniform(6, 10)  # Slightly larger spacing
             self.hue_offset = random.randint(0, 360)
             self.rotation = random.uniform(0, 2 * math.pi)
-            self.rotation_speed = random.uniform(-0.01, 0.01)
+            self.rotation_speed = random.uniform(-0.005, 0.005)  # Slower rotation
             self.points = []
-            self.max_n = random.randint(300, 800)
+            self.max_n = random.randint(1500, 2000)  # More points overall
             self.age = 0
 
         def update(self):
             self.rotation += self.rotation_speed
             self.age += 1
             if len(self.points) < self.max_n:
-                for _ in range(random.randint(5, 12)):  # Add more points gradually
+                #for _ in range(random.randint(2, 6)):  # Slower point growth
+                for _ in range(random.randint(1, 3)):  # Even slower growth
                     i = len(self.points)
                     angle = i * 137.5 * math.pi / 180 + self.rotation
-                    r = self.c * math.sqrt(i) + random.uniform(-1, 1)
-                    x = self.center[0] + math.cos(angle) * r + random.uniform(-1, 1)
-                    y = self.center[1] + math.sin(angle) * r + random.uniform(-1, 1)
+                    r = self.c * math.sqrt(i)
+                    jitter = random.uniform(-2, 2)
+                    x = self.center[0] + math.cos(angle) * (r + jitter)
+                    y = self.center[1] + math.sin(angle) * (r + jitter)
                     hue = (self.hue_offset + i * 0.7) % 360
                     self.points.append((x, y, hue, i))
 
         def draw(self, surface):
             for x, y, hue, i in self.points:
-                size = max(1, int(4 - i / 200))  # Shrink older dots
+                size = max(2, int(5 - i / 500))  # Slower shrink over time
                 color = pygame.Color(0)
                 color.hsva = ((hue + self.age * 0.5) % 360, 100, 100, 100)
                 if 0 <= x < WIDTH and 0 <= y < HEIGHT:
-                    pygame.draw.circle(surface, color, (int(x), int(y)), size)
+                    circle = pygame.Surface((size*2, size*2), pygame.SRCALPHA)
+                    pygame.draw.circle(circle, color, (size, size), size)
+                    circle.set_alpha(140)  # Keep slightly translucent
+                    surface.blit(circle, (x - size, y - size))
 
     def __init__(self):
-        self.bursts = [self.Burst() for _ in range(8)]
+        self.bursts = [self.Burst() for _ in range(14)]
 
     def update(self):
         for burst in self.bursts:
@@ -628,7 +689,6 @@ class MultiPhyllotaxisBursts(Pattern):
     def draw(self, surface):
         for burst in self.bursts:
             burst.draw(surface)
-
 
 # --- MultiLissajousPattern ---
 class MultiLissajousPattern(Pattern):
@@ -866,6 +926,7 @@ petal_field = PetalField()
 
 # --- Scene manager ---
 patterns = [
+    ButterflyScene,
     PainterlyMandalaField,
     BrushStreakBurst,
     ExpressiveSwirlBloom,
@@ -873,11 +934,10 @@ patterns = [
     PetalDriftVortexScene,
     PainterlyFlowerField,
     MultiRosePattern,
-    PhyllotaxisPattern,
     MultiPhyllotaxisBursts,
     RotatingFlowerField,
     MultiLissajousPattern,
-    MultiLSystemPattern
+    MultiLSystemPattern,
 ]
 
 scene_index = 0
