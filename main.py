@@ -316,16 +316,12 @@ class GalaxySwirlBloom(Pattern):
 
 
 class VortexPetal:
-    name = "VortexPetal"
-    duration = FPS * 15
-    music_file = "assets/SalmonLikeTheFish - Sequoia.mp3"
-
     def __init__(self):
         self.angle = random.uniform(0, 2 * math.pi)
-        self.radius = random.uniform(50, min(WIDTH, HEIGHT) // 2)
-        self.angular_velocity = random.uniform(0.01, 0.03)
-        self.radial_speed = random.uniform(-0.2, 0.2)
-        self.size = random.uniform(8, 18)
+        self.radius = random.uniform(40, min(WIDTH, HEIGHT) // 2)  # Slightly closer start
+        self.angular_velocity = random.uniform(0.015, 0.035)       # Slightly faster spin
+        self.radial_speed = random.uniform(-0.1, 0.3)              # Some will spiral in
+        self.size = random.uniform(16, 32)                         # Bigger petals
         self.hue = random.randint(0, 360)
         self.alpha = 255
         self.center = (WIDTH // 2, HEIGHT // 2)
@@ -333,20 +329,41 @@ class VortexPetal:
     def update(self):
         self.angle += self.angular_velocity
         self.radius += self.radial_speed
-        if self.radius < 10 or self.radius > min(WIDTH, HEIGHT) // 1.5:
+        if self.radius < 10 or self.radius > min(WIDTH, HEIGHT) // 1.3:
             return False
         return True
 
     def draw(self, surface):
         x = self.center[0] + math.cos(self.angle) * self.radius
         y = self.center[1] + math.sin(self.angle) * self.radius
-        petal_surface = pygame.Surface((40, 40), pygame.SRCALPHA)
-        color = pygame.Color(0)
-        color.hsva = (self.hue % 360, 60, 100, 100)
-        pygame.draw.ellipse(petal_surface, color, (10, 0, 20, 40))
+
+        # Create a surface for the glowing petal
+        petal_surface = pygame.Surface((60, 60), pygame.SRCALPHA)
+
+        # Core color of the petal
+        core_color = pygame.Color(0)
+        core_color.hsva = (self.hue % 360, 80, 100, 100)
+
+        # Glow edge (stronger saturation, but transparent and expanded)
+        for i in range(3, 0, -1):
+            alpha = 25 * i
+            glow_color = pygame.Color(0)
+            glow_color.hsva = (self.hue % 360, 100, 100, alpha / 2.55)
+            scale = 1.0 + i * 0.2
+            w = int(20 * scale)
+            h = int(40 * scale)
+            offset_x = 30 - w // 2
+            offset_y = 30 - h // 2
+            pygame.draw.ellipse(petal_surface, glow_color, (offset_x, offset_y, w, h))
+
+        # Draw solid center petal on top
+        pygame.draw.ellipse(petal_surface, core_color, (20, 10, 20, 40))
+
+        # Apply rotation and scaling
         rotated = pygame.transform.rotozoom(petal_surface, math.degrees(self.angle), self.size / 20)
         rect = rotated.get_rect(center=(int(x), int(y)))
         surface.blit(rotated, rect)
+
 
 class PetalDriftVortexScene(Pattern):
     name = "PetalDriftVortexScene"
@@ -354,17 +371,16 @@ class PetalDriftVortexScene(Pattern):
     music_file = "assets/JBlanked - Cobie Sample.mp3"
 
     def __init__(self):
-        self.petals = [VortexPetal() for _ in range(80)]
+        self.petals = [VortexPetal() for _ in range(120)]  # Increased from 80
 
     def update(self):
         self.petals = [p for p in self.petals if p.update()]
-        while len(self.petals) < 80:
+        while len(self.petals) < 120:
             self.petals.append(VortexPetal())
 
     def draw(self, surface):
         for petal in self.petals:
             petal.draw(surface)
-
 
 
 # --- PainterlyFlowerField (multiple flowers) ---
@@ -677,7 +693,7 @@ class MultiLSystemPattern(Pattern):
     music_file = "assets/Circus Marcus - Pompas de Jabón.mp3"
 
     def __init__(self):
-        self.instances = [self.create_instance() for _ in range(4)]
+        self.instances = [self.create_instance() for _ in range(10)]  # Was 4
         self.axiom = "F"
         self.rules = {"F": "F[+F]F[-F]F"}
 
@@ -689,9 +705,9 @@ class MultiLSystemPattern(Pattern):
             'y': random.randint(100, HEIGHT - 100),
             'hue_offset': random.randint(0, 360),
             'current_string': "F",
-            'angle': random.randint(15, 40),
+            'angle': random.randint(20, 45),  # Slightly wider angle range
             'growth_timer': 0,
-            'growth_delay': random.randint(30, 60)
+            'growth_delay': random.randint(20, 50)  # Faster growth
         }
 
     def apply_rules(self, s):
@@ -714,14 +730,14 @@ class MultiLSystemPattern(Pattern):
             angle = -90
             angle_step = inst['angle']
             hue = inst['hue_offset']
-            length = 6
+            length = 7  # Slightly longer steps
             for cmd in inst['current_string']:
                 if cmd == "F":
                     new_x = x + math.cos(math.radians(angle)) * length
                     new_y = y + math.sin(math.radians(angle)) * length
                     color = pygame.Color(0)
                     color.hsva = (hue % 360, 100, 100, 100)
-                    pygame.draw.line(surface, color, (x, y), (new_x, new_y), 2)
+                    pygame.draw.line(surface, color, (x, y), (new_x, new_y), 3)  # Thicker lines (was 2)
                     x, y = new_x, new_y
                     hue += 0.5
                 elif cmd == "+":
@@ -732,7 +748,6 @@ class MultiLSystemPattern(Pattern):
                     stack.append((x, y, angle))
                 elif cmd == "]":
                     x, y, angle = stack.pop()
-
 
 # --- PetalField overlay ---
 class Petal:
@@ -893,14 +908,23 @@ while running:
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT or (
-            event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE):
+                event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE
+        ):
             running = False
+        elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            # Skip to next pattern
+            scene_index = (scene_index + 1) % len(patterns)
+            current_pattern = patterns[scene_index]()
+            frame_count = 0
+            pygame.mixer.music.fadeout(1000)  # Optional: fade current track
+            pygame.mixer.music.load(current_pattern.music_file)
+            pygame.mixer.music.play()
 
     # Show pattern name for first 2 seconds
     if frame_count < FPS * 2:
         fade_alpha = int(255 * (1 - (frame_count / (FPS * 2))))
         # For testing, this will show the title of the pattern being run
-        #draw_scene_title(screen, current_pattern.name, fade_alpha)
+        draw_scene_title(screen, current_pattern.name, fade_alpha)
 
     pygame.display.flip()
     clock.tick(FPS)

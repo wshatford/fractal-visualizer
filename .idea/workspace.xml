@@ -11,10 +11,7 @@
       <change beforePath="$PROJECT_DIR$/build/fractal_viewer/PKG-00.toc" beforeDir="false" afterPath="$PROJECT_DIR$/build/fractal_viewer/PKG-00.toc" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/fractal_viewer/base_library.zip" beforeDir="false" afterPath="$PROJECT_DIR$/build/fractal_viewer/base_library.zip" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build/fractal_viewer/fractal_viewer.pkg" beforeDir="false" afterPath="$PROJECT_DIR$/build/fractal_viewer/fractal_viewer.pkg" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build/fractal_viewer/warn-fractal_viewer.txt" beforeDir="false" afterPath="$PROJECT_DIR$/build/fractal_viewer/warn-fractal_viewer.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/compiling.txt" beforeDir="false" afterPath="$PROJECT_DIR$/compiling.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/dist/fractal_viewer.exe" beforeDir="false" afterPath="$PROJECT_DIR$/dist/fractal_viewer.exe" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/kaleidoscope_tiling_visible.png" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -81,7 +78,7 @@
       <workItem from="1747748698901" duration="910000" />
       <workItem from="1747749630535" duration="9186000" />
       <workItem from="1747773460710" duration="795000" />
-      <workItem from="1747836854919" duration="13431000" />
+      <workItem from="1747836854919" duration="17714000" />
     </task>
     <servers />
   </component>
@@ -89,6 +86,6 @@
     <option name="version" value="3" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main Coverage Results" MODIFIED="1747868931208" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main Coverage Results" MODIFIED="1747931754622" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
