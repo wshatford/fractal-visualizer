@@ -40,8 +40,7 @@ class Pattern:
 class ButterflyScene(Pattern):
     name = "ButterflyScene"
     duration = FPS * 20
-    #music_file = "assets/JBlanked - Cobie Sample.mp3"
-    music_file = "assets/JBlanked - Many Blessings (Instrumental).mp3"
+    music_file = "assets/JBlanked_Bastardboy Production - Feel It.mp3"
 
     def __init__(self):
         self.background = pygame.image.load("assets/floral.png").convert()
@@ -984,7 +983,7 @@ while running:
     if frame_count < FPS * 2:
         fade_alpha = int(255 * (1 - (frame_count / (FPS * 2))))
         # For testing, this will show the title of the pattern being run
-        draw_scene_title(screen, current_pattern.name, fade_alpha)
+        #draw_scene_title(screen, current_pattern.name, fade_alpha)
 
     pygame.display.flip()
     clock.tick(FPS)
